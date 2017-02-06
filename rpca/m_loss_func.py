@@ -80,6 +80,20 @@ class HuberLoss(MLoss):
         assert float(delta) >= 0, 'delta has to be non-negative.'
 
         self.delta = float(delta)
+        self.delta_half_square = (self.delta ** 2) / 2.
 
     def __call__(self, x):
-        pass
+        x_flt = float(x)
+        assert x_flt >= 0
+        if x_flt <= self.delta:
+            return (x_flt ** 2) / 2.
+        else:
+            return self.delta * x_flt - self.delta_half_square
+
+    def weight(self, x):
+        x_flt = float(x)
+        assert x_flt >= 0
+        if x_flt <= self.delta:
+            return 1.
+        else:
+            return self.delta / x_flt
