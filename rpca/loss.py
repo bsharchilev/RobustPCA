@@ -6,9 +6,10 @@ class MLoss:
     An abstract class for a loss function suitable for an M-estimator solution using IRLS. Has to
     have a strict minimum at zero, be symmetric and positive definite, and increasing less than
     square.
-    Programmatically, it has to implement a __call__(self, x) method, where x is a float, a
-    diff(self, x) method returning its derivative at x, and (optionally) a weight(self,
-    x)=diff(self, x)/x.
+
+    Programmatically, it has to implement a ``__call__(self, x)`` method, where `x` is a float, a
+    ``diff(self, x)`` method returning its derivative at ``x``, and (optionally) a ``weight(self,
+    x)=diff(self, x)/x``.
     """
     __metaclass__ = ABCMeta
 
@@ -17,13 +18,13 @@ class MLoss:
         """
         Evaluates the function at x.
 
-        Parameters:
-        -----------
+        Parameters
+        ------------
         x : float
             Point to evaluate the function at.
 
-        Returns:
-        --------
+        Returns
+        ---------
         y : float
             Value at point x.
         """
@@ -33,13 +34,13 @@ class MLoss:
         """
         Evaluates the function's derivative at x.
 
-        Parameters:
-        -----------
+        Parameters
+        ------------
         x : float
             Point to evaluate the function derivative at.
 
-        Returns:
-        --------
+        Returns
+        ---------
         y : float
             Derivative value at point x.
         """
@@ -48,13 +49,13 @@ class MLoss:
         """
         Evaluates the weight function (:=f(x)/x) induced by the loss function at x.
 
-        Parameters:
-        -----------
+        Parameters
+        ------------
         x : float
             Point to evaluate the weight function at.
 
-        Returns:
-        --------
+        Returns
+        ---------
         y : float
             Weight function value at point x.
         """
@@ -62,16 +63,17 @@ class MLoss:
 
 class HuberLoss(MLoss):
     """
-    Huber loss function:
-
+    Huber loss function: 
+ 
     .. math::
-        \begin{cases}
-            \frac{x^2}{2},\,\,\,&\vert x\vert\leq\delta,\\
-            \delta\left(\vert x\vert - \frac{\delta}{2}\right),\,\,\,&\vert x\vert\geq\delta.
-        \end{cases}
+        f_\\delta (x) = \\begin{cases}
+        \\frac{x^2}{2},\\,\\,\\,&\\vert x\\vert\\leq\\delta,\\\\
+                \\delta\\left(\\vert x\\vert - \\frac{\\delta}{2} \\right),\\,\\,\\,&\\vert
+        x\\vert\\geq\\delta
+        \\end{cases}
 
-    Parameters:
-    -----------
+    Parameters
+    ------------
     delta : float >= 0
         Delta parameter in function definition.
     """
@@ -89,6 +91,9 @@ class HuberLoss(MLoss):
             return (x_flt ** 2) / 2.
         else:
             return self.delta * x_flt - self.delta_half_square
+    
+    def diff(self, x):
+        pass
 
     def weight(self, x):
         x_flt = float(x)
