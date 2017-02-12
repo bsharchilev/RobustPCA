@@ -1,0 +1,7 @@
+rpca
+====
+
+.. toctree::
+   :maxdepth: 4
+
+   rpca

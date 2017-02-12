@@ -1,0 +1,11 @@
+Robust PCA
+============
+.. automodule:: rpca.m_est_rpca
+	:members:
+
+M-Estimator Loss Functions
+==========================
+
+.. automodule:: rpca.loss
+    :members:
+    :special-members: __call__

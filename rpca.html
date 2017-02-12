@@ -1,0 +1,369 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Robust PCA &#8212; RobustPCA 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Robust PCA Using M-Estimator Loss" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Robust PCA Using M-Estimator Loss"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">RobustPCA 0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-rpca.m_est_rpca">
+<span id="robust-pca"></span><h1>Robust PCA<a class="headerlink" href="#module-rpca.m_est_rpca" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="rpca.m_est_rpca.MRobustPCA">
+<em class="property">class </em><code class="descclassname">rpca.m_est_rpca.</code><code class="descname">MRobustPCA</code><span class="sig-paren">(</span><em>n_components</em>, <em>loss</em>, <em>model='first'</em>, <em>copy=True</em>, <em>whiten=False</em>, <em>tol=0.0</em>, <em>eps=0.0</em>, <em>max_iter=100</em>, <em>random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rpca/m_est_rpca.html#MRobustPCA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpca.m_est_rpca.MRobustPCA" title="Permalink to this definition">¶</a></dt>
+<dd><p>An implementation of Robust PCA using M-estimator loss. A particular case with the Huber loss
+function is described in the paper:</p>
+<blockquote>
+<div>B.T. Polyak, M.V. Khlebnikov: Principal Component Analysis: Robust Variants, 2017.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_components: int or None</strong></p>
+<blockquote>
+<div><p>Number of components. If None, n_components = data dimensionality.</p>
+</div></blockquote>
+<p><strong>loss</strong> : MLossFunction object</p>
+<blockquote>
+<div><p>Loss function to be optimized during fitting. See &#8220;Loss functions&#8221; for details.</p>
+</div></blockquote>
+<p><strong>model</strong> : string {&#8216;first&#8217;, &#8216;second&#8217;} (default &#8216;first&#8217;)</p>
+<blockquote>
+<div><p>Statistical model to be used during fitting, according to the original method. First is
+based on the iid noise assumption, second estimates the noise covariance structure but
+assumes a single cluster center for all points. For more details, see the original paper.</p>
+</div></blockquote>
+<p><strong>copy</strong> : bool (default True)</p>
+<blockquote>
+<div><p>If False, data passed to fit are overwritten and running
+fit(X).transform(X) will not yield the expected results,
+use fit_transform(X) instead.</p>
+</div></blockquote>
+<p><strong>whiten</strong> : bool, optional (default False)</p>
+<blockquote>
+<div><p>When True (False by default) the <cite>components_</cite> vectors are multiplied
+by the square root of n_samples and then divided by the singular values
+to ensure uncorrelated outputs with unit component-wise variances.</p>
+</div></blockquote>
+<p><strong>tol</strong> : float &gt;= 0, optional (default .0)</p>
+<blockquote>
+<div><p>Tolerance for singular values.</p>
+</div></blockquote>
+<p><strong>eps</strong> : float &gt;= 0, optional (default .0)</p>
+<blockquote>
+<div><p>Max relative error for the objective function optimised by IRLS. Used as a stopping
+criterion.</p>
+</div></blockquote>
+<p><strong>max_iter</strong> : int &gt;= 0, optional (default 100)</p>
+<blockquote>
+<div><p>Max number of IRLS iterations performed during optimisation. Used as a stopping crietrion.</p>
+</div></blockquote>
+<p><strong>random_state</strong> : int or RandomState instance or None (default None)</p>
+<blockquote class="last">
+<div><p>Pseudo Random Number generator seed control. If None, use the
+numpy.random singleton.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="89%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>components_</td>
+<td>(array, [n_components, n_features]) Principal axes in feature space. The components are sorted by <code class="docutils literal"><span class="pre">explained_variance_</span></code>.</td>
+</tr>
+<tr class="row-even"><td>explained_variance_</td>
+<td>(array, [n_components]) The amount of variance explained by each of the selected components.</td>
+</tr>
+<tr class="row-odd"><td>explained_variance_ratio_</td>
+<td>(array, [n_components]) Percentage of variance explained by each of the selected components. If <code class="docutils literal"><span class="pre">n_components</span></code> is not set then all components are stored and the sum of explained variances is equal to 1.0.</td>
+</tr>
+<tr class="row-even"><td>mean_</td>
+<td>(array, [n_features]) Per-feature empirical mean, estimated from the training set. Equal to <cite>X.mean(axis=1)</cite>.</td>
+</tr>
+<tr class="row-odd"><td>n_components_</td>
+<td>(int) The number of components. It equals the parameter n_components, or n_features if n_components is None.</td>
+</tr>
+<tr class="row-even"><td>weights_</td>
+<td>(array, [n_samples]) Weights assigned to input samples during IRLS optimisation.</td>
+</tr>
+<tr class="row-odd"><td>n_iterations_</td>
+<td>(int) Number of iterations performed during fitting.</td>
+</tr>
+<tr class="row-even"><td>errors_</td>
+<td>(array, [n_iterations_]) Errors achieved by the method on each iteration.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rpca.m_est_rpca.MRobustPCA.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rpca/m_est_rpca.html#MRobustPCA.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpca.m_est_rpca.MRobustPCA.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the model with X.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: array-like, shape (n_samples, n_features)</strong></p>
+<blockquote>
+<div><p>Training data, where n_samples in the number of samples
+and n_features is the number of features.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>self</strong> : object</p>
+<blockquote class="last">
+<div><p>Returns the instance itself.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rpca.m_est_rpca.MRobustPCA.fit_transform">
+<code class="descname">fit_transform</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rpca/m_est_rpca.html#MRobustPCA.fit_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpca.m_est_rpca.MRobustPCA.fit_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit to data, then transform it.</p>
+<p>Fits the model to X and returns a transformed version of X.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: array-like, shape (n_samples, n_features)</strong></p>
+<blockquote>
+<div><p>Training data, where n_samples in the number of samples
+and n_features is the number of features.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">X_new: array-like, shape (n_samples, n_components)</p>
+<blockquote class="last">
+<div><p>Transformed array.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-rpca.loss">
+<span id="m-estimator-loss-functions"></span><h1>M-Estimator Loss Functions<a class="headerlink" href="#module-rpca.loss" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="rpca.loss.HuberLoss">
+<em class="property">class </em><code class="descclassname">rpca.loss.</code><code class="descname">HuberLoss</code><span class="sig-paren">(</span><em>delta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rpca/loss.html#HuberLoss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpca.loss.HuberLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Huber loss function:</p>
+<div class="math">
+\[\begin{split}f_\delta (x) = \begin{cases}
+\frac{x^2}{2},\,\,\,&amp;\vert x\vert\leq\delta,\\
+        \delta\left(\vert x\vert - \frac{\delta}{2} \right),\,\,\,&amp;\vert
+x\vert\geq\delta
+\end{cases}\end{split}\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>delta</strong> : float &gt;= 0</p>
+<blockquote class="last">
+<div><p>Delta parameter in function definition.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="rpca.loss.MLoss">
+<em class="property">class </em><code class="descclassname">rpca.loss.</code><code class="descname">MLoss</code><a class="reference internal" href="_modules/rpca/loss.html#MLoss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpca.loss.MLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>An abstract class for a loss function suitable for an M-estimator solution using IRLS. Has to
+have a strict minimum at zero, be symmetric and positive definite, and increasing less than
+square.</p>
+<p>Programmatically, it has to implement a <code class="docutils literal"><span class="pre">__call__(self,</span> <span class="pre">x)</span></code> method, where <cite>x</cite> is a float, a
+<code class="docutils literal"><span class="pre">diff(self,</span> <span class="pre">x)</span></code> method returning its derivative at <code class="docutils literal"><span class="pre">x</span></code>, and (optionally) a <code class="docutils literal"><span class="pre">weight(self,</span>
+<span class="pre">x)=diff(self,</span> <span class="pre">x)/x</span></code>.</p>
+<dl class="method">
+<dt id="rpca.loss.MLoss.__call__">
+<code class="descname">__call__</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rpca/loss.html#MLoss.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpca.loss.MLoss.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the function at x.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : float</p>
+<blockquote>
+<div><p>Point to evaluate the function at.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>y</strong> : float</p>
+<blockquote class="last">
+<div><p>Value at point x.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rpca.loss.MLoss.diff">
+<code class="descname">diff</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rpca/loss.html#MLoss.diff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpca.loss.MLoss.diff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the function&#8217;s derivative at x.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : float</p>
+<blockquote>
+<div><p>Point to evaluate the function derivative at.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>y</strong> : float</p>
+<blockquote class="last">
+<div><p>Derivative value at point x.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rpca.loss.MLoss.weight">
+<code class="descname">weight</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rpca/loss.html#MLoss.weight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpca.loss.MLoss.weight" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the weight function (:=f(x)/x) induced by the loss function at x.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : float</p>
+<blockquote>
+<div><p>Point to evaluate the weight function at.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>y</strong> : float</p>
+<blockquote class="last">
+<div><p>Weight function value at point x.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Robust PCA</a></li>
+<li><a class="reference internal" href="#module-rpca.loss">M-Estimator Loss Functions</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Robust PCA Using M-Estimator Loss</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/rpca.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Robust PCA Using M-Estimator Loss"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">RobustPCA 0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Boris Sharchilev.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.
+    </div>
+  </body>
+</html>

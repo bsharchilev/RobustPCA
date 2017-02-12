@@ -1,0 +1,317 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>rpca.m_est_rpca &#8212; RobustPCA 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">RobustPCA 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for rpca.m_est_rpca</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="k">import</span> <span class="n">PCA</span>
+<span class="kn">from</span> <span class="nn">sklearn.decomposition.base</span> <span class="k">import</span> <span class="n">_BasePCA</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="k">import</span> <span class="n">check_array</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils.extmath</span> <span class="k">import</span> <span class="n">svd_flip</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="k">import</span> <span class="n">issparse</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">linalg</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="MRobustPCA"><a class="viewcode-back" href="../../rpca.html#rpca.m_est_rpca.MRobustPCA">[docs]</a><span class="k">class</span> <span class="nc">MRobustPCA</span><span class="p">(</span><span class="n">_BasePCA</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An implementation of Robust PCA using M-estimator loss. A particular case with the Huber loss</span>
+<span class="sd">    function is described in the paper:</span>
+
+<span class="sd">        B.T. Polyak, M.V. Khlebnikov: Principal Component Analysis: Robust Variants, 2017.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    n_components: int or None</span>
+<span class="sd">        Number of components. If None, n_components = data dimensionality.</span>
+
+<span class="sd">    loss : MLossFunction object</span>
+<span class="sd">        Loss function to be optimized during fitting. See &quot;Loss functions&quot; for details.</span>
+
+<span class="sd">    model : string {&#39;first&#39;, &#39;second&#39;} (default &#39;first&#39;)</span>
+<span class="sd">        Statistical model to be used during fitting, according to the original method. First is</span>
+<span class="sd">        based on the iid noise assumption, second estimates the noise covariance structure but</span>
+<span class="sd">        assumes a single cluster center for all points. For more details, see the original paper.</span>
+
+<span class="sd">    copy : bool (default True)</span>
+<span class="sd">        If False, data passed to fit are overwritten and running</span>
+<span class="sd">        fit(X).transform(X) will not yield the expected results,</span>
+<span class="sd">        use fit_transform(X) instead.</span>
+
+<span class="sd">    whiten : bool, optional (default False)</span>
+<span class="sd">        When True (False by default) the `components_` vectors are multiplied</span>
+<span class="sd">        by the square root of n_samples and then divided by the singular values</span>
+<span class="sd">        to ensure uncorrelated outputs with unit component-wise variances.</span>
+
+<span class="sd">    tol : float &gt;= 0, optional (default .0)</span>
+<span class="sd">        Tolerance for singular values.</span>
+
+<span class="sd">    eps : float &gt;= 0, optional (default .0)</span>
+<span class="sd">        Max relative error for the objective function optimised by IRLS. Used as a stopping</span>
+<span class="sd">        criterion.</span>
+
+<span class="sd">    max_iter : int &gt;= 0, optional (default 100)</span>
+<span class="sd">        Max number of IRLS iterations performed during optimisation. Used as a stopping crietrion.</span>
+
+<span class="sd">    random_state : int or RandomState instance or None (default None)</span>
+<span class="sd">        Pseudo Random Number generator seed control. If None, use the</span>
+<span class="sd">        numpy.random singleton.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    components\_ : array, [n_components, n_features]</span>
+<span class="sd">        Principal axes in feature space. The components are sorted by</span>
+<span class="sd">        ``explained_variance_``.</span>
+
+<span class="sd">    explained_variance\_ : array, [n_components]</span>
+<span class="sd">        The amount of variance explained by each of the selected components.</span>
+
+<span class="sd">    explained_variance_ratio\_ : array, [n_components]</span>
+<span class="sd">        Percentage of variance explained by each of the selected components.</span>
+<span class="sd">        If ``n_components`` is not set then all components are stored and the</span>
+<span class="sd">        sum of explained variances is equal to 1.0.</span>
+
+<span class="sd">    mean\_ : array, [n_features]</span>
+<span class="sd">        Per-feature empirical mean, estimated from the training set.</span>
+<span class="sd">        Equal to `X.mean(axis=1)`.</span>
+
+<span class="sd">    n_components\_ : int</span>
+<span class="sd">        The number of components. It equals the parameter</span>
+<span class="sd">        n_components, or n_features if n_components is None.    </span>
+
+<span class="sd">    weights\_ : array, [n_samples]</span>
+<span class="sd">        Weights assigned to input samples during IRLS optimisation.</span>
+
+<span class="sd">    n_iterations\_ : int</span>
+<span class="sd">        Number of iterations performed during fitting.</span>
+
+<span class="sd">    errors\_ : array, [n_iterations\_]</span>
+<span class="sd">        Errors achieved by the method on each iteration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">n_components</span><span class="p">,</span>
+                 <span class="n">loss</span><span class="p">,</span>
+                 <span class="n">model</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">,</span>
+                 <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">whiten</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">tol</span><span class="o">=.</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">eps</span><span class="o">=.</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                 <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="o">=</span> <span class="n">n_components</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">copy</span> <span class="o">=</span> <span class="n">copy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">whiten</span> <span class="o">=</span> <span class="n">whiten</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">=</span> <span class="n">max_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+
+<div class="viewcode-block" id="MRobustPCA.fit"><a class="viewcode-back" href="../../rpca.html#rpca.m_est_rpca.MRobustPCA.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit the model with X.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X: array-like, shape (n_samples, n_features)</span>
+<span class="sd">            Training data, where n_samples in the number of samples</span>
+<span class="sd">            and n_features is the number of features.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : object</span>
+<span class="sd">            Returns the instance itself.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="MRobustPCA.fit_transform"><a class="viewcode-back" href="../../rpca.html#rpca.m_est_rpca.MRobustPCA.fit_transform">[docs]</a>    <span class="k">def</span> <span class="nf">fit_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit to data, then transform it.</span>
+
+<span class="sd">        Fits the model to X and returns a transformed version of X.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X: array-like, shape (n_samples, n_features)</span>
+<span class="sd">            Training data, where n_samples in the number of samples</span>
+<span class="sd">            and n_features is the number of features.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        X_new: array-like, shape (n_samples, n_components)</span>
+<span class="sd">            Transformed array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="c1"># Raise an error for sparse input.</span>
+        <span class="c1"># This is more informative than the generic one raised by check_array.</span>
+        <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;MRobustPCA does not support sparse input.&#39;</span><span class="p">)</span>
+
+        <span class="n">X</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">ensure_2d</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">copy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">)</span>
+
+        <span class="c1"># Handle n_components==None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">n_components</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_components</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;first&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_first_model</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">n_components</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;second&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_second_model</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">n_components</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown model </span><span class="si">%s</span><span class="s1">, should be </span><span class="se">\&#39;</span><span class="s1">first</span><span class="se">\&#39;</span><span class="s1"> or </span><span class="se">\&#39;</span><span class="s1">second</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_fit_first_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">n_components</span><span class="p">):</span>
+        <span class="n">vectorized_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">__call__</span><span class="p">)</span>
+        <span class="n">vectorized_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+
+        <span class="n">n_samples</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">n_samples</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">errors_</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iterations_</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">not_done_yet</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">while</span> <span class="n">not_done_yet</span><span class="p">:</span>
+            <span class="c1"># Calculating components with current weights</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mean_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weights_</span><span class="p">)</span>
+            <span class="n">X_centered</span> <span class="o">=</span> <span class="n">X</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_</span>
+            <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">X_centered</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights_</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">components_</span> <span class="o">=</span> <span class="n">V</span><span class="p">[:</span><span class="n">n_components</span><span class="p">,</span> <span class="p">:]</span>
+
+            <span class="c1"># Calculate current errors</span>
+            <span class="n">non_projected_metric</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_features</span><span class="p">)</span> <span class="o">-</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">components_</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components_</span><span class="p">)</span>
+            <span class="n">errors_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">X_centered</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">non_projected_metric</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X_centered</span><span class="o">.</span><span class="n">T</span><span class="p">))))</span>
+            <span class="n">errors_loss</span> <span class="o">=</span> <span class="n">vectorized_loss</span><span class="p">(</span><span class="n">errors_raw</span><span class="p">)</span>
+
+            <span class="c1"># New weights based on errors</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span> <span class="o">=</span> <span class="n">vectorized_weights</span><span class="p">(</span><span class="n">errors_raw</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="c1"># Checking stopping criteria</span>
+            <span class="n">iterations_done</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">old_total_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors_</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">total_error</span> <span class="o">=</span> <span class="n">errors_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+            <span class="c1">#assert total_error &lt;= old_total_error</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">total_error</span><span class="p">,</span> <span class="mf">0.</span><span class="p">):</span>
+                <span class="n">rel_error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">total_error</span> <span class="o">-</span> <span class="n">old_total_error</span><span class="p">)</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">total_error</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rel_error</span> <span class="o">=</span> <span class="mf">0.</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[RPCA] Iteraton </span><span class="si">%d</span><span class="s1">: error </span><span class="si">%f</span><span class="s1">, relative error </span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">iterations_done</span><span class="p">,</span>
+                                                                     <span class="n">total_error</span><span class="p">,</span>
+                                                                     <span class="n">rel_error</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">errors_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_error</span><span class="p">)</span>
+            <span class="n">not_done_yet</span> <span class="o">=</span> <span class="n">rel_error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="ow">and</span> <span class="n">iterations_done</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span>
+        <span class="k">if</span> <span class="n">rel_error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;[RPCA] Did not reach desired precision after </span><span class="si">%d</span><span class="s1"> iterations; relative</span><span class="se">\</span>
+<span class="s1">                          error </span><span class="si">%f</span><span class="s1"> instead of specified maximum </span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">iterations_done</span><span class="p">,</span>
+                                                                     <span class="n">rel_error</span><span class="p">,</span>
+                                                                     <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">))</span>
+        <span class="c1"># Get variance explained by singular values</span>
+        <span class="n">explained_variance_</span> <span class="o">=</span> <span class="p">(</span><span class="n">S</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_samples</span>
+        <span class="n">total_var</span> <span class="o">=</span> <span class="n">explained_variance_</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">total_var</span><span class="p">,</span> <span class="mf">0.</span><span class="p">):</span>
+            <span class="n">explained_variance_ratio_</span> <span class="o">=</span> <span class="n">explained_variance_</span> <span class="o">/</span> <span class="n">total_var</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">explained_variance_ratio_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">explained_variance_</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_samples_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_features_</span> <span class="o">=</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">n_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_components_</span> <span class="o">=</span> <span class="n">n_components</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">explained_variance_</span> <span class="o">=</span> <span class="n">explained_variance_</span><span class="p">[:</span><span class="n">n_components</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">explained_variance_ratio_</span> <span class="o">=</span> \
+            <span class="n">explained_variance_ratio_</span><span class="p">[:</span><span class="n">n_components</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">errors_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">errors_</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="k">def</span> <span class="nf">_fit_second_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">n_components</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Only the first model is implemented yet.&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">RobustPCA 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Boris Sharchilev.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.
+    </div>
+  </body>
+</html>

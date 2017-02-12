@@ -1,0 +1,25 @@
+.. RobustPCA documentation master file, created by
+   sphinx-quickstart on Sun Feb 12 22:23:30 2017.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Robust PCA Using M-Estimator Loss
+=====================================
+
+This package implements the ideas described in the paper:
+
+This implementation extends the popular Scikit-Learn library, which means that it is both dependent on it and allows
+to use all Scikit-Learn Transformer uilities.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   rpca
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
