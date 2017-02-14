@@ -3,3 +3,7 @@
 bin
 docs
 examples
+MRobustPCA.egg-info
+build
+dist
+files.txt
