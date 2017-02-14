@@ -25,31 +25,14 @@ class MRobustPCA(_BasePCA):
     model : string {'first', 'second'} (default 'first')
         Statistical model to be used during fitting, according to the original method. First is
         based on the iid noise assumption, second estimates the noise covariance structure but
-        assumes a single cluster center for all points. For more details, see the original paper.
+        assumes a single cluster center for all points. For more details, see the original paper.abs
 
-    copy : bool (default True)
-        If False, data passed to fit are overwritten and running
-        fit(X).transform(X) will not yield the expected results,
-        use fit_transform(X) instead.
-
-    whiten : bool, optional (default False)
-        When True (False by default) the `components_` vectors are multiplied
-        by the square root of n_samples and then divided by the singular values
-        to ensure uncorrelated outputs with unit component-wise variances.
-
-    tol : float >= 0, optional (default .0)
-        Tolerance for singular values.
-
-    eps : float >= 0, optional (default .0)
+    eps : float >= 0, optional (default 1e-6)
         Max relative error for the objective function optimised by IRLS. Used as a stopping
         criterion.
 
     max_iter : int >= 0, optional (default 100)
         Max number of IRLS iterations performed during optimisation. Used as a stopping crietrion.
-
-    random_state : int or RandomState instance or None (default None)
-        Pseudo Random Number generator seed control. If None, use the
-        numpy.random singleton.
 
     Attributes
     ----------
@@ -86,21 +69,14 @@ class MRobustPCA(_BasePCA):
                  n_components,
                  loss,
                  model='first',
-                 copy=True,
-                 whiten=False,
-                 tol=.0,
-                 eps=.0,
-                 max_iter=100,
-                 random_state=None):
+                 eps=1e-6,
+                 max_iter=100):
         self.n_components = n_components
         self.loss = loss
         self.model = model
-        self.copy = copy
-        self.whiten = whiten
-        self.tol = tol
         self.eps = eps
         self.max_iter = max_iter
-        self.random_state = random_state
+        self.whiten = False # TODO: implement proper whitening
 
     def fit(self, X, y=None):
         """
@@ -137,7 +113,7 @@ class MRobustPCA(_BasePCA):
         X_new: array-like, shape (n_samples, n_components)
             Transformed array.
         """
-        return super().fit_transform(X, y)
+        return super(MRobustPCA, self).fit_transform(X, y)
 
     def _fit(self, X):
         # Raise an error for sparse input.
@@ -146,7 +122,7 @@ class MRobustPCA(_BasePCA):
             raise TypeError('MRobustPCA does not support sparse input.')
 
         X = check_array(X, dtype=[np.float64], ensure_2d=True,
-                        copy=self.copy)
+                        copy=True)
 
         # Handle n_components==None
         if self.n_components is None:
@@ -187,24 +163,23 @@ class MRobustPCA(_BasePCA):
             self.weights_ = vectorized_weights(errors_raw)
             self.weights_ /= self.weights_.sum()
             # Checking stopping criteria
-            iterations_done += 1
+            self.n_iterations_ += 1
             old_total_error = self.errors_[-1]
             total_error = errors_loss.sum()
 
-            #assert total_error <= old_total_error
             if not np.equal(total_error, 0.):
                 rel_error = abs(total_error - old_total_error) / abs(total_error)
             else:
                 rel_error = 0.
 
-            print('[RPCA] Iteraton %d: error %f, relative error %f'%(iterations_done,
+            print('[RPCA] Iteraton %d: error %f, relative error %f'%(self.n_iterations_,
                                                                      total_error,
                                                                      rel_error))
             self.errors_.append(total_error)
-            not_done_yet = rel_error > self.eps and iterations_done < self.max_iter
+            not_done_yet = rel_error > self.eps and self.n_iterations_ < self.max_iter
         if rel_error > self.eps:
             warnings.warn('[RPCA] Did not reach desired precision after %d iterations; relative\
-                          error %f instead of specified maximum %f'%(iterations_done,
+                          error %f instead of specified maximum %f'%(self.n_iterations_,
                                                                      rel_error,
                                                                      self.eps))
         # Get variance explained by singular values

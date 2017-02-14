@@ -6,3 +6,4 @@ function is described in the paper:
 
 """
 from .m_est_rpca import *
+import loss
