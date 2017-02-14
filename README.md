@@ -2,8 +2,32 @@
 # README
 
 ## Installation
+**Dependencies**:
+- Numpy
+- Scipy
+- Scikit-Learn
+- Pandas
 
-TODO
+Before the installation, make sure that Numpy and Scipy are installed.
+
+Clone the reopsitory:
+```bash
+git clone https://github.com/bsharchilev/RobustPCA
+```
+`cd` to the repository directory:
+```bash
+cd RobustPCA
+```
+Run the `setup.py` script and make sure to specify a file where a list of installed files will be recorded:
+```bash
+python setup.py install --record files.txt
+```
+
+## Uninstallation
+Assuming that the path to the file specified in the last installation step is `files.txt`:
+```bash
+cat files.txt | xargs rm -rf
+```
 
 ## Documentation
 API documentation for the package is available at http://bsharchilev.github.io/RobustPCA.
