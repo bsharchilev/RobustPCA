@@ -57,7 +57,7 @@ plt.show()
 ```
 
 
-![png](examples_files/examples_5_0.png)
+![png](README_files/README_5_0.png)
 
 
 
@@ -85,5 +85,5 @@ plt.show()
 ```
 
 
-![png](examples_files/examples_6_0.png)
+![png](README_files/README_6_0.png)
 
