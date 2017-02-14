@@ -76,31 +76,14 @@
 <span class="sd">    model : string {&#39;first&#39;, &#39;second&#39;} (default &#39;first&#39;)</span>
 <span class="sd">        Statistical model to be used during fitting, according to the original method. First is</span>
 <span class="sd">        based on the iid noise assumption, second estimates the noise covariance structure but</span>
-<span class="sd">        assumes a single cluster center for all points. For more details, see the original paper.</span>
+<span class="sd">        assumes a single cluster center for all points. For more details, see the original paper.abs</span>
 
-<span class="sd">    copy : bool (default True)</span>
-<span class="sd">        If False, data passed to fit are overwritten and running</span>
-<span class="sd">        fit(X).transform(X) will not yield the expected results,</span>
-<span class="sd">        use fit_transform(X) instead.</span>
-
-<span class="sd">    whiten : bool, optional (default False)</span>
-<span class="sd">        When True (False by default) the `components_` vectors are multiplied</span>
-<span class="sd">        by the square root of n_samples and then divided by the singular values</span>
-<span class="sd">        to ensure uncorrelated outputs with unit component-wise variances.</span>
-
-<span class="sd">    tol : float &gt;= 0, optional (default .0)</span>
-<span class="sd">        Tolerance for singular values.</span>
-
-<span class="sd">    eps : float &gt;= 0, optional (default .0)</span>
+<span class="sd">    eps : float &gt;= 0, optional (default 1e-6)</span>
 <span class="sd">        Max relative error for the objective function optimised by IRLS. Used as a stopping</span>
 <span class="sd">        criterion.</span>
 
 <span class="sd">    max_iter : int &gt;= 0, optional (default 100)</span>
 <span class="sd">        Max number of IRLS iterations performed during optimisation. Used as a stopping crietrion.</span>
-
-<span class="sd">    random_state : int or RandomState instance or None (default None)</span>
-<span class="sd">        Pseudo Random Number generator seed control. If None, use the</span>
-<span class="sd">        numpy.random singleton.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -137,21 +120,14 @@
                  <span class="n">n_components</span><span class="p">,</span>
                  <span class="n">loss</span><span class="p">,</span>
                  <span class="n">model</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">,</span>
-                 <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                 <span class="n">whiten</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">tol</span><span class="o">=.</span><span class="mi">0</span><span class="p">,</span>
-                 <span class="n">eps</span><span class="o">=.</span><span class="mi">0</span><span class="p">,</span>
-                 <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-                 <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">eps</span><span class="o">=</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span>
+                 <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="o">=</span> <span class="n">n_components</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">copy</span> <span class="o">=</span> <span class="n">copy</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">whiten</span> <span class="o">=</span> <span class="n">whiten</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">=</span> <span class="n">max_iter</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">whiten</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># TODO: implement proper whitening</span>
 
 <div class="viewcode-block" id="MRobustPCA.fit"><a class="viewcode-back" href="../../rpca.html#rpca.m_est_rpca.MRobustPCA.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -188,7 +164,7 @@
 <span class="sd">        X_new: array-like, shape (n_samples, n_components)</span>
 <span class="sd">            Transformed array.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">MRobustPCA</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
         <span class="c1"># Raise an error for sparse input.</span>
@@ -197,7 +173,7 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;MRobustPCA does not support sparse input.&#39;</span><span class="p">)</span>
 
         <span class="n">X</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">ensure_2d</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                        <span class="n">copy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">)</span>
+                        <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Handle n_components==None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -238,24 +214,23 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span> <span class="o">=</span> <span class="n">vectorized_weights</span><span class="p">(</span><span class="n">errors_raw</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
             <span class="c1"># Checking stopping criteria</span>
-            <span class="n">iterations_done</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_iterations_</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="n">old_total_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors_</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">total_error</span> <span class="o">=</span> <span class="n">errors_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
-            <span class="c1">#assert total_error &lt;= old_total_error</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">total_error</span><span class="p">,</span> <span class="mf">0.</span><span class="p">):</span>
                 <span class="n">rel_error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">total_error</span> <span class="o">-</span> <span class="n">old_total_error</span><span class="p">)</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">total_error</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">rel_error</span> <span class="o">=</span> <span class="mf">0.</span>
 
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[RPCA] Iteraton </span><span class="si">%d</span><span class="s1">: error </span><span class="si">%f</span><span class="s1">, relative error </span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">iterations_done</span><span class="p">,</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[RPCA] Iteraton </span><span class="si">%d</span><span class="s1">: error </span><span class="si">%f</span><span class="s1">, relative error </span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iterations_</span><span class="p">,</span>
                                                                      <span class="n">total_error</span><span class="p">,</span>
                                                                      <span class="n">rel_error</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">errors_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_error</span><span class="p">)</span>
-            <span class="n">not_done_yet</span> <span class="o">=</span> <span class="n">rel_error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="ow">and</span> <span class="n">iterations_done</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span>
+            <span class="n">not_done_yet</span> <span class="o">=</span> <span class="n">rel_error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iterations_</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span>
         <span class="k">if</span> <span class="n">rel_error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;[RPCA] Did not reach desired precision after </span><span class="si">%d</span><span class="s1"> iterations; relative</span><span class="se">\</span>
-<span class="s1">                          error </span><span class="si">%f</span><span class="s1"> instead of specified maximum </span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">iterations_done</span><span class="p">,</span>
+<span class="s1">                          error </span><span class="si">%f</span><span class="s1"> instead of specified maximum </span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iterations_</span><span class="p">,</span>
                                                                      <span class="n">rel_error</span><span class="p">,</span>
                                                                      <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">))</span>
         <span class="c1"># Get variance explained by singular values</span>

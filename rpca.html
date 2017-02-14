@@ -55,7 +55,7 @@
 <span id="robust-pca"></span><h1>Robust PCA<a class="headerlink" href="#module-rpca.m_est_rpca" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="rpca.m_est_rpca.MRobustPCA">
-<em class="property">class </em><code class="descclassname">rpca.m_est_rpca.</code><code class="descname">MRobustPCA</code><span class="sig-paren">(</span><em>n_components</em>, <em>loss</em>, <em>model='first'</em>, <em>copy=True</em>, <em>whiten=False</em>, <em>tol=0.0</em>, <em>eps=0.0</em>, <em>max_iter=100</em>, <em>random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rpca/m_est_rpca.html#MRobustPCA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpca.m_est_rpca.MRobustPCA" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">rpca.m_est_rpca.</code><code class="descname">MRobustPCA</code><span class="sig-paren">(</span><em>n_components</em>, <em>loss</em>, <em>model='first'</em>, <em>eps=1e-06</em>, <em>max_iter=100</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rpca/m_est_rpca.html#MRobustPCA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpca.m_est_rpca.MRobustPCA" title="Permalink to this definition">¶</a></dt>
 <dd><p>An implementation of Robust PCA using M-estimator loss. A particular case with the Huber loss
 function is described in the paper:</p>
 <blockquote>
@@ -76,37 +76,16 @@ function is described in the paper:</p>
 <blockquote>
 <div><p>Statistical model to be used during fitting, according to the original method. First is
 based on the iid noise assumption, second estimates the noise covariance structure but
-assumes a single cluster center for all points. For more details, see the original paper.</p>
+assumes a single cluster center for all points. For more details, see the original paper.abs</p>
 </div></blockquote>
-<p><strong>copy</strong> : bool (default True)</p>
-<blockquote>
-<div><p>If False, data passed to fit are overwritten and running
-fit(X).transform(X) will not yield the expected results,
-use fit_transform(X) instead.</p>
-</div></blockquote>
-<p><strong>whiten</strong> : bool, optional (default False)</p>
-<blockquote>
-<div><p>When True (False by default) the <cite>components_</cite> vectors are multiplied
-by the square root of n_samples and then divided by the singular values
-to ensure uncorrelated outputs with unit component-wise variances.</p>
-</div></blockquote>
-<p><strong>tol</strong> : float &gt;= 0, optional (default .0)</p>
-<blockquote>
-<div><p>Tolerance for singular values.</p>
-</div></blockquote>
-<p><strong>eps</strong> : float &gt;= 0, optional (default .0)</p>
+<p><strong>eps</strong> : float &gt;= 0, optional (default 1e-6)</p>
 <blockquote>
 <div><p>Max relative error for the objective function optimised by IRLS. Used as a stopping
 criterion.</p>
 </div></blockquote>
 <p><strong>max_iter</strong> : int &gt;= 0, optional (default 100)</p>
-<blockquote>
-<div><p>Max number of IRLS iterations performed during optimisation. Used as a stopping crietrion.</p>
-</div></blockquote>
-<p><strong>random_state</strong> : int or RandomState instance or None (default None)</p>
 <blockquote class="last">
-<div><p>Pseudo Random Number generator seed control. If None, use the
-numpy.random singleton.</p>
+<div><p>Max number of IRLS iterations performed during optimisation. Used as a stopping crietrion.</p>
 </div></blockquote>
 </td>
 </tr>
