@@ -10,7 +10,7 @@
 
 Before the installation, make sure that Numpy and Scipy are installed.
 
-Clone the reopsitory:
+Clone the repository:
 ```bash
 git clone https://github.com/bsharchilev/RobustPCA
 ```
