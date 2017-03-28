@@ -78,7 +78,7 @@ class MRobustPCA(_BasePCA):
         self.max_iter = max_iter
         self.whiten = False # TODO: implement proper whitening
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, weights_init=None):
         """
         Fit the model with X.
 
@@ -93,7 +93,7 @@ class MRobustPCA(_BasePCA):
         self : object
             Returns the instance itself.
         """
-        self._fit(X)
+        self._fit(X, weights_init)
         return self
 
     def fit_transform(self, X, y=None):
