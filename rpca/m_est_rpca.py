@@ -115,7 +115,7 @@ class MRobustPCA(_BasePCA):
         """
         return super(MRobustPCA, self).fit_transform(X, y)
 
-    def _fit(self, X):
+    def _fit(self, X, weights_init=None):
         # Raise an error for sparse input.
         # This is more informative than the generic one raised by check_array.
         if issparse(X):
@@ -131,18 +131,21 @@ class MRobustPCA(_BasePCA):
             n_components = self.n_components
 
         if self.model == 'first':
-            return self._fit_first_model(X, n_components)
+            return self._fit_first_model(X, n_components, weights_init)
         elif self.model == 'second':
-            return self._fit_second_model(X, n_components)
+            return self._fit_second_model(X, n_components, weights_init)
         else:
             raise ValueError('Unknown model %s, should be \'first\' or \'second\''%(self.model))
 
-    def _fit_first_model(self, X, n_components):
+    def _fit_first_model(self, X, n_components, weights_init):
         vectorized_loss = np.vectorize(self.loss.__call__)
         vectorized_weights = np.vectorize(self.loss.weight)
 
         n_samples, n_features = X.shape
-        self.weights_ = 1. / n_samples * np.ones(n_samples)
+        if weights_init is not None:
+            self.weights_ = weights_init
+        else:
+            self.weights_ = 1. / n_samples * np.ones(n_samples)
         self.errors_ = [np.inf]
         self.n_iterations_ = 0
         not_done_yet = True
