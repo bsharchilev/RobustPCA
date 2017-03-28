@@ -154,7 +154,7 @@ class MRobustPCA(_BasePCA):
             self.mean_ = np.average(X, axis=0, weights=self.weights_)
             X_centered = X - self.mean_
             U, S, V = linalg.svd(X_centered * np.sqrt(self.weights_.reshape(-1,1)))
-            U, V = svd_flip(U, V)
+            # U, V = svd_flip(U, V)
             self.components_ = V[:n_components, :]
 
             # Calculate current errors
