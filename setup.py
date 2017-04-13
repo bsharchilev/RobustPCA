@@ -8,7 +8,7 @@ setup(
     author_email = "bsharchilev@gmail.com",
     description = ("A scikit-learn-compatible implementation of Robust PCA using M-estimator loss."),
     url = "https://github.com/bsharchilev/RobustPCA",
-    packages = ['rpca', 'rpca.data'],
+    packages = ['rpca', 'rpca.data', 'rpca.baselines'],
     install_requires = [
         'numpy',
         'scipy',
