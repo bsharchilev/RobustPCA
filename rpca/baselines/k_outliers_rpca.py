@@ -22,15 +22,18 @@ class kOutliersRPCA(PCA):
     num_outliers\_: int >= 0
         Number of outliers identified. If 0, the method reduces to ordinary PCA.
 
-    outlier_inds\_: array of int, [num_outliers]
-        Indices of outliers in X used for fitting.
+    outlier_mask\_: array of bool, [n_samples_]
+        Boolean mask of identified outliers in X used for fitting.
     """
     def __init__(self, *args, **kwargs):
         self.num_outliers_ = kwargs.pop('num_outliers')
-        return super(PCA, self).__init__(*args, **kwargs)
+        return PCA.__init__(self, *args, **kwargs)
 
     def fit(self, X, y=None):
-        super(PCA, self).fit(X)
-        X_scores = super(PCA, self).score_samples(X)
-        self.outlier_inds_ = np.argsort(-X_scores)[:self.num_outliers_]
-        return super(PCA, self).fit(X[self.outlier_inds_, :])
+        PCA.fit(self, X)
+        X_scores = PCA.score_samples(self, X)
+        outlier_inds = np.argsort(X_scores)[:self.num_outliers_]
+
+        self.outlier_mask_ = np.zeros(len(X), dtype=bool)
+        self.outlier_mask_[outlier_inds] = True
+        return PCA.fit(self, X[~self.outlier_mask_, :])
