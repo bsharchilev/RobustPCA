@@ -130,14 +130,9 @@ class MRobustPCA(_BasePCA):
         else:
             n_components = self.n_components
 
-        if self.model == 'first':
-            return self._fit_first_model(X, n_components, weights_init)
-        elif self.model == 'second':
-            return self._fit_second_model(X, n_components, weights_init)
-        else:
-            raise ValueError('Unknown model %s, should be \'first\' or \'second\''%(self.model))
+        return self._fit_model(X, n_components, weights_init)
 
-    def _fit_first_model(self, X, n_components, weights_init):
+    def _fit_model(self, X, n_components, weights_init):
         vectorized_loss = np.vectorize(self.loss.__call__)
         vectorized_weights = np.vectorize(self.loss.weight)
 
@@ -157,10 +152,19 @@ class MRobustPCA(_BasePCA):
             # U, V = svd_flip(U, V)
             self.components_ = V[:n_components, :]
 
-            # Calculate current errors
-            non_projected_metric = np.eye(n_features) - \
-                    self.components_.T.dot(self.components_)
-            errors_raw = np.sqrt(np.diag(X_centered.dot(non_projected_metric.dot(X_centered.T))))
+            # Calculate current errors in different models
+            if self.model == 'first':
+                non_projected_metric = np.eye(n_features) - \
+                        self.components_.T.dot(self.components_)
+                errors_raw = np.sqrt(np.diag(X_centered.dot(non_projected_metric.dot(X_centered.T))))
+            elif self.model == 'second':
+                # Obtain inverse empirical covariance from the SVD
+                R_inv = np.diag(1. / S**2.)
+                inverse_cov = V.T.dot(R_inv.dot(V))
+                errors_raw = np.sqrt(np.diag(X_centered.dot(inverse_cov.dot(X_centered.T))))
+            else:
+                raise ValueError('Model should be either \"first\" or \"second\".') 
+
             errors_loss = vectorized_loss(errors_raw)
 
             # New weights based on errors
@@ -200,6 +204,3 @@ class MRobustPCA(_BasePCA):
             explained_variance_ratio_[:n_components]
 
         self.errors_ = np.array(self.errors_[1:])
-
-    def _fit_second_model(self, X, n_components):
-        raise NotImplementedError('Only the first model is implemented yet.')
