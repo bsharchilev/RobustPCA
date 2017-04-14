@@ -1,3 +1,1 @@
-from .greedy_rpca import GreedyRPCA
-from .k_outliers_rpca import kOutliersRPCA
-from .incremental_rpca import IncrementalRPCA
+from .outlier_detector_rpca import kOutliersRPCA, GreedyRPCA, IncrementalRPCA
