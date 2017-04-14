@@ -1,5 +1,8 @@
 import numpy as np
+
 from sklearn.decomposition import PCA
+from itertools import product
+
 from abc import ABCMeta, abstractmethod
 
 class OutlierDetectorRPCA(PCA):
@@ -97,4 +100,27 @@ class IncrementalRPCA(OutlierDetectorRPCA):
             X_remain = X[list(indices - set([i])), :]
             PCA.fit(self, X_remain)
             log_likelihoods = np.append(log_likelihoods, PCA.score_samples(self, X_remain).sum())
+        return np.argmax(log_likelihoods)
 
+class CombinatorialRPCA(OutlierDetectorRPCA):
+    """
+    Loops through each combination of ```n_outliers``` points from X and labels as outliers the
+    combination which yields the highest log-likelihood when removed.
+    """
+    def fit(self, X, y=None):
+        index_space = [list(range(len(X)))] * self.num_outliers_
+        all_indices = set(range(len(X)))
+        best_indices, max_log_likelihood = [0] * self.num_outliers_, -np.inf
+        for indices_to_remove in product(*index_space):
+            indices_to_leave = list(all_indices - set(indices_to_remove))
+            X_remain = X[indices_to_leave, :]
+            PCA.fit(self, X_remain)
+
+            current_log_likelihood = PCA.score_samples(self, X_remain).sum()
+            if current_log_likelihood > max_log_likelihood:
+                best_indices = list(indices_to_remove)
+                max_log_likelihood = current_log_likelihood
+
+        self.outlier_mask_ = np.zeros(len(X), dtype=bool)
+        self.outlier_mask_[best_indices] = True
+        return PCA.fit(self, X[~self.outlier_mask_, :])
